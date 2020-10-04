@@ -30,7 +30,7 @@
 
 ![Untitled](https://user-images.githubusercontent.com/67780144/95018026-cdf2c580-0697-11eb-88da-03a98ddc0000.png)
 
-![Untitled 4](https://user-images.githubusercontent.com/67780144/95018032-d0edb600-0697-11eb-96de-069b5112ed78.png)
+![Untitled 1](https://user-images.githubusercontent.com/67780144/95018028-cf23f280-0697-11eb-81b2-7893a9dd1fc6.png)
 
 - Event-Driven 방식은 여러개의 Connection을 몽땅 다 Event Handler를 통해 비동기 방식으로 처리해 먼저 처리되는 것부터 Logic이 진행되게끔 한다.
 - 새로운 요청이 들어오더라도 새로운 프로세스나 쓰레드를 생성하지 않기 때문에 생성 비용이 존재하지 않고 적은 자원으로도 효율적인 운용이 가능하다.
@@ -44,15 +44,17 @@
     - Master Process : 설정 파일을 읽고, 유효성을 검사, Worker 관리
     - Worker Process : 모든 요청을 관리, Worker Process의 개수를 Config 파일에서 정의되며, 정의된 Process 개수와 사용 가능한 CPU 코어 숫자에 맞게 자동으로 조정된다.
 
-![Untitled 1](https://user-images.githubusercontent.com/67780144/95018028-cf23f280-0697-11eb-81b2-7893a9dd1fc6.png)
-
 ![Untitled 2](https://user-images.githubusercontent.com/67780144/95018029-cfbc8900-0697-11eb-968b-b502b9a2bb40.png)
+
+![Untitled 3](https://user-images.githubusercontent.com/67780144/95018031-d0551f80-0697-11eb-84e3-046c80546cfd.png)
 
 ## Nginx 로드밸런싱
 
 - HTTP, TCP, UDP 모두 가능하다.
 
-![Untitled 3](https://user-images.githubusercontent.com/67780144/95018031-d0551f80-0697-11eb-84e3-046c80546cfd.png)
+![Untitled 4](https://user-images.githubusercontent.com/67780144/95018032-d0edb600-0697-11eb-96de-069b5112ed78.png)
+
+
 
 ### Load Balancing 설정 순서
 

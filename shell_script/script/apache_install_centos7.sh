@@ -1,108 +1,198 @@
 #!/bin/bash
 
-####### Supporting OS : CentOS7
-####### Made on November 10, 2020
-####### Backend : Tomcat (If you want to run multiple tomcat host, edit this script)
-####### Apache - Connector - Tomcat
+### BEGIN INIT INFO
+### Provides:    httpd 2.4.46
+### Description : Install the Apache web server as a source compilation
+### END INIT INFO
+
+#########################################################
+#########################################################
+
+## Set Variable of APR, APR-util, PCRE, httpd Version 
+
+#########################################################
+#########################################################
+
+
+HTTPD_VERSION=2.4.46
+PCRE_VERSION=8.44
+APRUTIL_VERSION=1.6.1
+APR_VERSION=1.7.0
+
+#########################################################
+
+#########################################################
 
 
 
-# Variables
-check_os=`cat /etc/*release | grep -e "^ID=" | awk -F\" '{print $2}'`
-
-########## Please Customize your environment ##############
-###########################################################
-host_ip="192.168.100.20"
-tomcat_ip="192.168.100.21"
-
-#SELinux disabled
-sed -i 's/^SELINUX=.*$/SELINUX=disabled/' /etc/selinux/config
-setenforce 0
+# Exit immediately if a command exits with a non-zero status
+set -e
 
 
-# Check if you are using centos7 or not
-if [[ $check_os = "centos" ]]; then
-	echo "-----------------------------------------------------------"
-	echo "--------------------Install apache-------------------------"
-else
-	echo "This script only supports CentOS7"
-	exit 0
-fi
-#You can use below too.
-#elif [[ {$check_os} != centos ]]; then
-#	echo "This script only supports CentOS7."
-#	exit 0
-#fi
-
-# Install packages related apache
-yum -y update
-for package in "httpd" "httpd-devel" "gcc" "gcc-c++" "wget"
-do
-	yum -y install $package
-done
-sleep 2
-
-# Tomcat-connector
-wget http://apache.tt.co.kr/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.48-src.tar.gz
-
-tar zvxf tomcat-connectors-1.2.48-src.tar.gz
-cd tomcat-connectors-1.2.48-src/native/
-apx=`which apxs`
-
-./configure --with-apxs=/$apx
-make && make install
-
-sed -i "s/^#ServerName.*/ServerName $host_ip:80/" /etc/httpd/conf/httpd.conf
-
-cd /etc/httpd/conf.d/
-
-# mod_jk.conf 생성 후 설정 
-cat << EOF > mod_jk.conf
-LoadModule jk_module modules/mod_jk.so
-
-JkWorkersFile conf.d/workers.properties
-JkShmFile     run/mod_jk.shm
-JkLogFile     logs/mod_jk.log
-JkLogLevel    info
-JKMountFile conf.d/uriworkermap.properties
-JKLogStampFormat "[%a %b %d %H:%M:%s %Y]"
-JKRequestLogFormat "%w %V %T"
-EOF
-
-# workers.properties 생성 후 설정
-cat << EOF > workers.properties
-worker.list=worker1
-worker.worker1.type=ajp13
-worker.worker1.host=$host_ip
-worker.worker1.port=8009
-EOF
-
-# uriworkermap.properties 생성 후 설정
-cat << EOF > uriworkermap.properties
-/*.worker1
-EOF
-
-# .html, .jpg, .gif는 apache 단에서 처리
-cat << EOF >> /etc/httpd/conf/httpd.conf
-JkUnMount /*.html worker1
-JkUnMount /*.jpg worker1
-JkUnMount /*.dif worker1
-EOF
-
-apachectl configtest
-retVar=$?
-
-if [[ $retVar -ne 0 ]]; then
-	echo "Something wrong"
-	exit 0
+if [ $(cat /etc/os-release | grep "^NAME" | awk -F= '{print $2}' | awk -F\" '{print $2}') != 'Ubuntu' ]; then
+	echo "#############################################"
+	echo ""
+	echo "This script is for Ubuntu 18.04 only."
+	echo ""
+	echo "#############################################"
+	exit
 fi
 
-# firewall config
-for prt in 80 8009
-do
-	firewall-cmd --permanent --zone=public --add-port=$prt/tcp
-done
-firewall-cmd --reload
+if [ "$EUID" -ne 0 ]; then
+	echo "##############################################"
+	echo ""
+	echo "ROOT Privilege is required."
+	echo ""
+	echo "Usage : sudo ./ubuntu_apache_installation.sh"
+	echo ""
+	echo "##############################################"
+	exit
+fi
 
-# Daemon
-systemctl restart httpd && systemctl enable httpd
+
+echo "##############################################"
+echo "##############################################"
+echo ""
+echo "       HTTPD $HTTPD_VERSION Version   "
+echo ""
+echo "##############################################"
+echo "##############################################"
+
+sleep 5
+
+# Install the necessary packages
+apt-get update -y
+apt-get install build-essential -y
+apt-get install libexpat1-dev -y
+
+if [ ! -d /usr/local/src ]; then
+	mkdir /usr/local/src
+fi
+
+echo "################################################"
+echo "################################################"
+echo ""
+echo "     Install PCRE, APR, APR-util "
+echo ""
+echo "################################################"
+echo "################################################"
+sleep 5
+
+
+## Get source files from internet
+cd /usr/local/src
+wget https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
+wget https://downloads.apache.org//apr/apr-$APR_VERSION.tar.gz
+wget https://downloads.apache.org//apr/apr-util-$APRUTIL_VERSION.tar.gz
+wget https://downloads.apache.org//httpd/httpd-$HTTPD_VERSION.tar.gz
+
+## tar 프로그램으로 tar.gz 압축 파일을 풀어준다.
+tar xvfz apr-$APR_VERSION.tar.gz
+tar xvfz apr-util-$APRUTIL_VERSION.tar.gz 
+tar xvfz pcre-$PCRE_VERSION.tar.gz
+tar xvfz httpd-$HTTPD_VERSION.tar.gz
+
+## 1. apr
+cd /usr/local/src/apr-$APR_VERSION
+./configure --prefix=/usr/local/apr
+make; make install
+
+## 2. apr-util
+cd /usr/local/src/apr-util-$APRUTIL_VERSION
+./configure --prefix=/usr/local/apr-util --with-apr=/usr/local/apr
+make; make install
+
+## 3. PCRE
+cd /usr/local/src/pcre-$PCRE_VERSION
+./configure --prefix=/usr/local/pcre
+make; make install
+
+
+cd /usr/local/src/httpd-$HTTPD_VERSION
+
+./configure --prefix=/usr/local/apache \
+--enable-module=so --enable-rewrite --enable-so \
+--with-apr=/usr/local/apr \
+--with-apr-util=/usr/local/apr-util \
+--with-pcre=/usr/local/pcre \
+--enable-mods-shared=all
+
+make; make install
+
+
+echo "######################################################"
+echo ""
+echo "     Installed PCRE, APR, APR-util "
+echo ""
+echo "#######################################################"
+sleep 5
+
+
+
+## create systemd service file and register httpd service
+
+if [ -d /lib/systemd/system ]; then
+cat << EOF > /lib/systemd/system/httpd.service 
+[Unit]
+Description=apache
+After=network.target syslog.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+
+ExecStart=/usr/local/apache/bin/apachectl start
+ExecStop=/usr/local/apache/bin/apachectl stop
+
+Umask=007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+elif [ -d /usr/lib/systemd/system ]; then
+cat << EOF > /lib/systemd/system/httpd.service
+[Unit]
+Description=apache
+After=network.target syslog.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+
+ExecStart=/usr/local/apache/bin/apachectl start
+ExecStop=/usr/local/apache/bin/apachectl stop
+
+Umask=007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+fi
+
+
+echo " "
+echo " "
+echo " "
+echo " "
+echo " "
+echo " "
+echo "################################################"
+echo " "
+echo " "
+echo "           Installation Completed      "
+echo " "
+echo " "
+echo "################################################"
+echo " "
+echo " "
+echo " "
+echo " "
+echo " "

@@ -6,10 +6,24 @@
 ### Description  : Link Apache and Tomcat using Mod_JK Protocol
 ### END INIT INFO
 
+
+### Check if this user has sudo privilege or not
+if [ "$EUID" -ne 0 ]; then
+    echo "##############################################"
+    echo ""
+    echo "ROOT Privilege is required."
+    echo ""
+    echo "Usage : sudo ./ubuntu_mod_jk_link.sh"
+    echo ""
+    echo "##############################################"
+    exit
+fi
+
+
 ### Set Variable
 
 TOMCAT_CONNECTOR_VER=1.2.48
-read -p "Input Tomcat_IP >>" TOMCAT_IP
+read -rp "Input Tomcat_IP >>" TOMCAT_IP
 
 
 ### Define Functions
@@ -47,7 +61,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 
-### 1. Prerequisite
+# 1. Prerequisite
 
 apt-get update -y
 
@@ -55,8 +69,7 @@ apt-get update -y
 apt-get install apache2-dev -y
 
 
-### 2. Get mod_jk module
-
+# 2. Get mod_jk module
 message_show "Install tomcat_connector $TOMCAT_CONNECTOR_VER"
 
 cd /usr/local/src
@@ -69,15 +82,14 @@ APXS_PATH=$(which apxs)
 
 cd tomcat-connectors-$TOMCAT_CONNECTOR_VER-src/native/
 
-./configure --with-apxs=$APXS_PATH
+./configure --with-apxs="$APXS_PATH"
 
 make; make install
 
 mv apache-2.0/mod_jk.so /usr/local/apache2.4/modules/
 
 
-### 3. Edit Apache configuration Files
-
+# 3. Edit Apache configuration Files
 message_show "Edit Apache Configuration Files"
 
 

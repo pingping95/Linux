@@ -1,7 +1,8 @@
 #!/bin/bash
 
 ### BEGIN INIT INFO
-### Provides:    Tomcat 9.0.41
+### Supported OS: Ubuntu 18.04
+### Provides    : Tomcat 9.0.41
 ### Description : Install the Tomcat Server as a source compilation
 ### END INIT INFO
 

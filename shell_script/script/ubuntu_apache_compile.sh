@@ -1,64 +1,59 @@
 #!/bin/bash
 
 ### BEGIN INIT INFO
-### Provides:    httpd 2.4.46
-### Description : Install the Apache web server as a source compilation
+### Provides     : httpd 2.4.46
+### Supported OS : Ubuntu 18.04
+### Description  : Install the Apache web server as a source compilation
 ### END INIT INFO
-
-#########################################################
-#########################################################
-
-## Set Variable of APR, APR-util, PCRE, httpd Version
-
-#########################################################
-#########################################################
-
-
-HTTPD_VERSION=2.4.46
-PCRE_VERSION=8.44
-APRUTIL_VERSION=1.6.1
-APR_VERSION=1.7.0
-
-#########################################################
-
-#########################################################
 
 
 
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+### Check if this user has sudo privilege or not
+if [ "$EUID" -ne 0 ]; then
+    echo "##############################################"
+    echo ""
+    echo "ROOT Privilege is required."
+    echo ""
+    echo "Usage : sudo ./ubuntu_mod_jk_link.sh"
+    echo ""
+    echo "##############################################"
+    exit
+fi
+
 
 if [ $(cat /etc/os-release | grep "^NAME" | awk -F= '{print $2}' | awk -F\" '{print $2}') != 'Ubuntu' ]; then
-        echo "#############################################"
-        echo ""
-        echo "This script is for Ubuntu 18.04 only."
-        echo ""
-        echo "#############################################"
-        exit
-fi
-
-if [ "$EUID" -ne 0 ]; then
-        echo "##############################################"
-        echo ""
-        echo "ROOT Privilege is required."
-        echo ""
-        echo "Usage : sudo ./ubuntu_apache_installation.sh"
-        echo ""
-        echo "##############################################"
-        exit
+    echo "#############################################"
+    echo ""
+    echo "This script is for Ubuntu 18.04 only."
+    echo ""
+    echo "#############################################"
+    exit
 fi
 
 
-echo "##############################################"
-echo "##############################################"
-echo ""
-echo "       HTTPD $HTTPD_VERSION Version   "
-echo ""
-echo "##############################################"
-echo "##############################################"
+### Set Variable
 
-sleep 5
+HTTPD_VERSION=2.4.46
+PCRE_VERSION=8.44
+APRUTIL_VERSION=1.6.1
+APR_VERSION=1.7.0
+
+
+### Define Functions
+
+show_message() {
+    echo "#############################################"
+    echo ""
+    echo "$1"
+    echo ""
+    echo "#############################################"
+    sleep 5
+}
+
+
 
 # Install the necessary packages
 apt-get update -y
@@ -69,14 +64,8 @@ if [ ! -d /usr/local/src ]; then
         mkdir /usr/local/src
 fi
 
-echo "################################################"
-echo "################################################"
-echo ""
-echo "     Install PCRE, APR, APR-util "
-echo ""
-echo "################################################"
-echo "################################################"
-sleep 5
+
+show_message "Install PCRE, APR, APR-util"
 
 
 ## Get source files from internet
@@ -119,13 +108,6 @@ cd /usr/local/src/httpd-$HTTPD_VERSION
 
 make; make install
 
-
-echo "######################################################"
-echo ""
-echo "     Installed PCRE, APR, APR-util "
-echo ""
-echo "#######################################################"
-sleep 5
 
 
 
@@ -178,21 +160,4 @@ EOF
 fi
 
 
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo "################################################"
-echo " "
-echo " "
-echo "           Installation Completed      "
-echo " "
-echo " "
-echo "################################################"
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
+show_message "Installation Completed"

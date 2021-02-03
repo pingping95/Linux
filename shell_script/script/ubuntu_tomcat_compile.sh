@@ -4,26 +4,49 @@
 ### Supported OS: Ubuntu 18.04
 ### Provides    : Tomcat 9.0.41
 ### Description : Install the Tomcat Server as a source compilation
+### Provides     : Tomcat 9.0.41
+### Supported OS : Ubuntu 18.04
+### Description  : Install the Tomcat Server as a source compilation
 ### END INIT INFO
 
-#########################################################
-#########################################################
-
-## Set Variable of Tomcat, openjdk
-
-#########################################################
-#########################################################
 
 
-TOMCAT_VERSION=9.0.41
 
-
-#########################################################
-#########################################################
 
 
 # Exit immediately if a command exits with a non-zero status
 set -e
+
+
+if [ $(cat /etc/os-release | grep "^NAME" | awk -F= '{print $2}' | awk -F\" '{print $2}') != 'Ubuntu' ]; then
+    echo "#############################################"
+    echo ""
+    echo "This script is for Ubuntu 18.04 only."
+    echo ""
+    echo "#############################################"
+    exit
+fi
+
+
+
+
+### Set Variable
+
+TOMCAT_VERSION=9.0.41
+
+### Define Functions
+
+show_message() {
+    echo ""
+    echo "#############################################"
+    echo ""
+    echo "$1"
+    echo ""
+    echo "#############################################"
+    echo ""
+    sleep 5
+}
+
 
 
 ## 1. Install JRE (Java Runtime Environment)
@@ -54,11 +77,7 @@ source /etc/profile
 java -version 2> /dev/null
 
 if [ $? -ne 0 ]; then
-    echo "#######################################################"
-    echo ""
-    echo "           OpenJDK Does not installed..                "
-    echo ""
-    echo "#######################################################"
+    show_message "OpenJDK Does not installed.."
     exit 0
 fi
 
@@ -67,14 +86,8 @@ fi
 
 ## 3. Create Tomcat user and Install Apache Tomcat
 
-echo "################################################"
-echo "################################################"
-echo ""
-echo "   Create Tomcat user and Install Tomcat $TOMCAT_VERSION "
-echo ""
-echo "################################################"
-echo "################################################"
-sleep 5
+show_message "Create Tomcat user and Install Tomcat $TOMCAT_VERSION"
+
 
 
 sudo groupadd tomcat
@@ -95,14 +108,9 @@ sudo chown -R tomcat:tomcat tomcat
 
 ## 5. Systemd Unit file
 
-echo "################################################"
-echo "################################################"
-echo ""
-echo "  Make Tomcat service to use systemctl command "
-echo ""
-echo "################################################"
-echo "################################################"
-sleep 5
+show_message "Make Tomcat service to use systemctl command"
+
+
 
 sudo bash -c 'cat >> /etc/systemd/system/tomcat.service' << EOF
 
@@ -129,25 +137,9 @@ EOF
 
 ## 6. Restart Daemon
 
-systemctl daemon-reload 
-systemctl restart tomcat
+sudo systemctl daemon-reload 
+sudo systemctl restart tomcat
+sudo systemctl enable tomcat
 
 
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo "################################################"
-echo " "
-echo " "
-echo "           Installation Completed      "
-echo " "
-echo " "
-echo "################################################"
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
+show_message "Tomcat Installation completed"

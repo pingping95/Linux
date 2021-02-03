@@ -7,6 +7,11 @@
 ### END INIT INFO
 
 
+
+### Exit immediately if a command exits with a non-zero status
+set -e
+
+
 ### Check if this user has sudo privilege or not
 if [ "$EUID" -ne 0 ]; then
     echo "##############################################"
@@ -16,6 +21,16 @@ if [ "$EUID" -ne 0 ]; then
     echo "Usage : sudo ./ubuntu_mod_jk_link.sh"
     echo ""
     echo "##############################################"
+    exit
+fi
+
+
+if [ $(cat /etc/os-release | grep "^NAME" | awk -F= '{print $2}' | awk -F\" '{print $2}') != 'Ubuntu' ]; then
+    echo "#############################################"
+    echo ""
+    echo "This script is for Ubuntu 18.04 only."
+    echo ""
+    echo "#############################################"
     exit
 fi
 
@@ -28,37 +43,18 @@ read -rp "Input Tomcat_IP >>" TOMCAT_IP
 
 ### Define Functions
 
-message_show() {
+show_message() {
+    echo ""
     echo "#############################################"
     echo ""
     echo "$1"
     echo ""
     echo "#############################################"
+    echo ""
     sleep 5
 }
 
 
-
-### Exit immediately if a command exits with a non-zero status
-set -e
-
-
-### Check if this server is Ubuntu or not
-if [ $(cat /etc/os-release | grep "^NAME" | awk -F= '{print $2}' | awk -F\" '{print $2}') != 'Ubuntu' ]; then
-    message_show "This script is for Ubuntu 18.04 Only"
-fi
-
-### Check if this user has sudo privilege or not
-if [ "$EUID" -ne 0 ]; then
-    echo "##############################################"
-    echo ""
-    echo "ROOT Privilege is required."
-    echo ""
-    echo "Usage : sudo ./ubuntu_mod_jk_link.sh"
-    echo ""
-    echo "##############################################"
-    exit
-fi
 
 
 # 1. Prerequisite
@@ -70,15 +66,13 @@ apt-get install apache2-dev -y
 
 
 # 2. Get mod_jk module
-message_show "Install tomcat_connector $TOMCAT_CONNECTOR_VER"
+show_message "Install tomcat_connector $TOMCAT_CONNECTOR_VER"
 
 cd /usr/local/src
 
 wget http://apache.tt.co.kr/tomcat/tomcat-connectors/jk/tomcat-connectors-$TOMCAT_CONNECTOR_VER-src.tar.gz
 
 tar zxvf tomcat-connectors-$TOMCAT_CONNECTOR_VER-src.tar.gz
-
-APXS_PATH=$(which apxs)
 
 cd tomcat-connectors-$TOMCAT_CONNECTOR_VER-src/native/
 
@@ -90,12 +84,12 @@ mv apache-2.0/mod_jk.so /usr/local/apache2.4/modules/
 
 
 # 3. Edit Apache configuration Files
-message_show "Edit Apache Configuration Files"
+show_message "Edit Apache Configuration Files"
 
 
 # Edit httpd.conf
 
-message_show "1. httpd.conf"
+show_message "1. httpd.conf"
 
 cat << EOF >> /usr/local/apache2.4/conf/httpd.conf
 
@@ -105,7 +99,7 @@ EOF
 
 # Add mod_jk.conf file
 
-message_show "2. mod_jk.conf"
+show_message "2. mod_jk.conf"
 
 if [ -d /usr/local/apache2.4/runs ]; then
 
@@ -139,7 +133,7 @@ fi
 
 # Add workers.properties File
 
-message_show "3. workers.properties"
+show_message "3. workers.properties"
 
 
 cat << EOF >> /usr/local/apache2.4/conf/workers.properties
@@ -153,7 +147,7 @@ EOF
 
 # Add uriworkermap.properties
 
-message_show "4. uriworkermap.properties"
+show_message "4. uriworkermap.properties"
 
 
 cat << EOF >> /usr/local/apache2.4/conf/uriworkermap.properties
@@ -163,7 +157,7 @@ EOF
 
 
 
-message_show "Apache configuration completed.
+show_message "Apache configuration completed.
 
 Please Open 8009 Port in the Tomcat Server.
 

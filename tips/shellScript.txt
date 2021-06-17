@@ -1,0 +1,23 @@
+1. OS 확인
+
+# OS가 무엇인지 확인할 수 있는 Function
+# Linux Shell Script에서 OS가 무엇인지 확인할 때 사용할 수 있다.
+
+function osrelease () {
+    OS=`cat /etc/os-release | grep '^NAME=' |  tr -d \" | sed 's/\n//g' | sed 's/NAME=//g'`
+    if [ "${OS}" == "Ubuntu" ]; then
+        echo "Ubuntu"
+    elif [ "${OS}" == "Amazon Linux AMI" ]; then
+        echo "AMZN"
+    elif [ "${OS}" == "Amazon Linux" ]; then
+        echo "AMZN2"
+    elif [ "${OS}" == "CentOS Linux" ]; then
+        echo "CentOS"
+    else
+        echo "Operating System Not Found"
+    fi
+}
+
+2. Parameter를 기입하지 않은 경우 Error 출력하기
+
+if [ $# == 0 ] ; then echo "No input provided!        $0 {CWLogGroup} {logFile}" >&2 ; exit 1 ; fi

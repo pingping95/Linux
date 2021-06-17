@@ -11,8 +11,8 @@
 sudo yum -y update
 
 # 생성할 user의 id와 pw 기입
-id='user'
-pw='passw0rd'
+id="user"
+pw="passw0rd"
 
 # User 생성
 # User 없을 시 아래 if문을 실행하지 않음
@@ -23,8 +23,8 @@ if [ -n "$id" ] && [ -n "$pw" ]; then
 fi
 
 # Timezone 변경
-sudo rm -rf /etc/localtime
-sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+sudo mv /etc/localtime /etc/localtime_old
+sudo cp -av /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 
 
 # password 접속 허용
